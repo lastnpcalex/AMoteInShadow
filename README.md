@@ -149,6 +149,4 @@ Under the following terms:
  
 2. **No additional restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 
-## Contact
 
-For questions, feedback, or inquiries, reach out to [your contact information].
