@@ -11,7 +11,7 @@ In 66036 Sol Universal Time, the United Planets of the Local Bubble, the Spannin
 - **Chaeyoung**: An exobiologist who accepts a mission to explore Mu Herculis and discovers alien ruins.
 - **Frederik**: Captain of the cargo ship Ergo Infinitum, who accepts a suspicious contract with unexpected consequences.
 - **Isabell**: An operative with the enigmatic Grayson Services Group.
-- **Ai Jones-Diaz (Betty Blue)**: An undercover operative with a hidden agenda, working within the complex web of interstellar politics.
+- **Ai aka "Betty Blue"**: An undercover operative with a hidden agenda, working within the complex web of interstellar politics.
 
 As their paths converge, they uncover a conspiracy involving ancient alien technology that could change humanity's future forever.
 
