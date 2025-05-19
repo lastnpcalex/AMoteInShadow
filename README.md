@@ -6,12 +6,12 @@
 
 ## Story
 
-In the 69th millennium (SolUT), the United Planets of the Local Bubble, the Spanning Worlds Independence, and the Homeworlds Federation maintain an uneasy peace after a devastating interstellar war. The story follows several protagonists:
+In 66036 Sol Universal Time, the United Planets of the Local Bubble, the Spanning Worlds Independence, and the Homeworlds Federation maintain an uneasy peace after a devastating interstellar war. The story follows several protagonists:
 
 - **Chaeyoung**: An exobiologist who accepts a mission to explore Mu Herculis and discovers alien ruins.
 - **Frederik**: Captain of the cargo ship Ergo Infinitum, who accepts a suspicious contract with unexpected consequences.
 - **Isabell**: An operative with the enigmatic Grayson Services Group.
-- **Anya**: A member of the elite Shades military unit caught in the middle of interstellar intrigue.
+- **Ai Jones-Diaz (Betty Blue)**: An undercover operative with a hidden agenda, working within the complex web of interstellar politics.
 
 As their paths converge, they uncover a conspiracy involving ancient alien technology that could change humanity's future forever.
 
