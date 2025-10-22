@@ -78,3 +78,17 @@ function initImageHandling() {
     });
   }
 }
+
+
+(function markActiveNav() {
+  const here = location.pathname.replace(/\/index\.html$/, '/');
+  document.querySelectorAll('nav.sidebar a[href]').forEach(a => {
+    const target = a.getAttribute('href').replace(/\/index\.html$/, '/');
+    if (target === here) {
+      a.setAttribute('aria-current', 'page');
+      const li = a.closest('li');
+      if (li) li.classList.add('active');
+    }
+  });
+})();
+
