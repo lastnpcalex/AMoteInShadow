@@ -80,15 +80,33 @@ function initImageHandling() {
 }
 
 
-(function markActiveNav() {
-  const here = location.pathname.replace(/\/index\.html$/, '/');
-  document.querySelectorAll('nav.sidebar a[href]').forEach(a => {
-    const target = a.getAttribute('href').replace(/\/index\.html$/, '/');
-    if (target === here) {
-      a.setAttribute('aria-current', 'page');
-      const li = a.closest('li');
-      if (li) li.classList.add('active');
+// --- simple include loader for new nav bar
+document.addEventListener('DOMContentLoaded', async () => {
+  const zones = document.querySelectorAll('[data-include]');
+  if (!zones.length) return;
+
+  for (const zone of zones) {
+    const target = zone.getAttribute('data-include'); // e.g., "nav.html"
+    // Resolve URL relative to the current page (your chapter file)
+    const url = new URL(target, location.href).toString();
+    console.log('[include] fetching:', url);
+
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const html = await res.text();
+      // Replace the placeholder node with the fetched markup
+      zone.outerHTML = html;
+      console.log('[include] injected:', url);
+    } catch (err) {
+      console.error('[include] failed:', url, err);
+      zone.innerHTML = `
+        <div style="padding:.75rem;border:1px solid #c33;color:#c33;background:#fee">
+          Failed to load <code>${url}</code> – ${err.message}.
+          Check the path and that you're serving over http(s), not file://
+        </div>`;
     }
-  });
-})();
+  }
+});
+
 
