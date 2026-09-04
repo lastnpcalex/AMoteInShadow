@@ -79,6 +79,20 @@ class ReaderTests(unittest.TestCase):
         numbers = [int(value) for value in re.findall(r'id="translation-(\d+)"', self.page)]
         self.assertEqual(numbers, list(range(1, 170)))
 
+    def test_reader_shell_and_purchase_paths(self) -> None:
+        self.assertIn('class="transmission-shell"', self.page)
+        self.assertIn('aria-label="Novel reading progress"', self.page)
+        self.assertIn("A burnt-out exobiologist", self.page)
+        self.assertIn("https://a.co/d/d4eV40z", self.page)
+        self.assertIn("https://lastnpcalex.gumroad.com/l/AMoteInShadow", self.page)
+        self.assertIn("https://lastnpcalex.agency/ams", self.page)
+
+    def test_infinite_scroll_has_no_pagers_or_link_arrows(self) -> None:
+        self.assertNotIn("section-pager", self.page)
+        self.assertNotIn("pager-link", self.page)
+        for arrow in ("→", "↗", "←"):
+            self.assertNotIn(arrow, self.page)
+
 
 if __name__ == "__main__":
     unittest.main()

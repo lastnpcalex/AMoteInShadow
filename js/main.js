@@ -9,7 +9,10 @@
   const contentsClose = document.getElementById('contents-close');
   const generatedContents = document.getElementById('generated-contents');
   const locationLabel = document.getElementById('signal-location');
+  const bookScroller = document.getElementById('book');
+  const progressIndicator = document.querySelector('.reading-progress');
   const progressBar = document.getElementById('reading-progress-bar');
+  const progressValue = document.getElementById('reading-progress-value');
   const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   function setTheme(theme) {
@@ -19,6 +22,7 @@
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     toggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
     toggle.querySelector('.theme-icon').textContent = theme === 'dark' ? '☼' : '◐';
+    toggle.querySelector('.theme-label').textContent = ` ${nextTheme.toUpperCase()} MODE`;
   }
 
   document.getElementById('theme-toggle').addEventListener('click', function () {
@@ -69,39 +73,7 @@
     generatedContents.replaceChildren(fragment);
   }
 
-  function buildSectionPagers() {
-    const readingSections = navigableSections.filter((section) => {
-      const kind = sectionKind(section);
-      return kind === 'chapter' || kind === 'appendix' || kind === 'about';
-    });
-    readingSections.forEach((section, index) => {
-      const pager = document.createElement('nav');
-      pager.className = 'section-pager';
-      pager.setAttribute('aria-label', 'Previous and next sections');
-      const previous = readingSections[index - 1];
-      const next = readingSections[index + 1];
-      pager.append(
-        previous ? pagerLink(previous, '← PREVIOUS') : document.createElement('span'),
-        next ? pagerLink(next, 'NEXT →') : document.createElement('span')
-      );
-      section.append(pager);
-    });
-  }
-
-  function pagerLink(section, direction) {
-    const link = document.createElement('a');
-    const label = document.createElement('span');
-    const title = document.createElement('strong');
-    link.className = 'pager-link';
-    link.href = `#${section.id}`;
-    label.textContent = direction;
-    title.textContent = section.dataset.navTitle;
-    link.append(label, title);
-    return link;
-  }
-
   buildContents();
-  buildSectionPagers();
 
   document.getElementById('contents-filter').addEventListener('input', function () {
     const query = this.value.trim().toLowerCase();
@@ -139,7 +111,7 @@
       .filter((entry) => entry.isIntersecting)
       .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
     if (visible[0]) markActive(visible[0].target);
-  }, { rootMargin: '-14% 0px -66% 0px', threshold: [0, 0.01, 0.15] });
+  }, { root: bookScroller, rootMargin: '-14% 0px -66% 0px', threshold: [0, 0.01, 0.15] });
   navigableSections.forEach((section) => sectionObserver.observe(section));
 
   const savedSection = localStorage.getItem('ams-last-section');
@@ -152,12 +124,18 @@
 
   let progressQueued = false;
   function updateProgress() {
-    const documentHeight = document.documentElement.scrollHeight - innerHeight;
-    const progress = documentHeight > 0 ? Math.min(1, Math.max(0, scrollY / documentHeight)) : 0;
+    const onePagers = document.getElementById('one-pagers-personal-use-eyes-only');
+    const novelEnd = onePagers ? onePagers.offsetTop : bookScroller.scrollHeight;
+    const novelScrollDistance = Math.max(1, novelEnd - bookScroller.clientHeight);
+    const progress = Math.min(1, Math.max(0, bookScroller.scrollTop / novelScrollDistance));
+    const percentage = Math.round(progress * 100);
     progressBar.style.width = `${progress * 100}%`;
+    progressValue.value = `${percentage}%`;
+    progressValue.textContent = progressValue.value;
+    progressIndicator.setAttribute('aria-valuenow', String(percentage));
     progressQueued = false;
   }
-  addEventListener('scroll', () => {
+  bookScroller.addEventListener('scroll', () => {
     if (!progressQueued) {
       progressQueued = true;
       requestAnimationFrame(updateProgress);
@@ -268,6 +246,7 @@
 
   addEventListener('resize', () => {
     if (innerWidth > 1120) setContents(false);
+    updateProgress();
     document.querySelectorAll('.translation-unit.is-decoding, .translation-unit.is-pinned').forEach(positionPopover);
   });
 

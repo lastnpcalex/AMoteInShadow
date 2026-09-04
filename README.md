@@ -8,9 +8,11 @@ The reader is generated from the final DOCX manuscript rather than maintained as
 - a table of contents generated from the book's real section headings;
 - 169 accessible translation notes with phrase-by-phrase decode animation;
 - an **Auto Translate** mode that reveals every annotated translation in place;
-- matching dark and light versions of the transmission design used on [lastnpcalex.agency](https://lastnpcalex.agency);
+- matching dark and light versions of the internally scrolling transmission design used on [lastnpcalex.agency](https://lastnpcalex.agency);
 - corrected, web-oriented diagrams and click-to-enlarge figures;
-- responsive reading controls, reading progress, resume position, and old-URL redirects.
+- a bottom-docked reading indicator that measures the novel and deliberately excludes the One Pagers;
+- the publisher blurb, current cover, and direct Amazon, preferred Gumroad, and all-editions purchase paths;
+- responsive reading controls, resume position, and old-URL redirects.
 
 The site is plain static HTML, CSS, and JavaScript and can be deployed directly with GitHub Pages.
 

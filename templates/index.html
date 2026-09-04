@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400;1,7..72,600&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script>
     (function () {
@@ -28,8 +28,6 @@
 <body>
   <a class="skip-link" href="#book">Skip to the book</a>
   <div class="signal-field" aria-hidden="true"></div>
-  <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
-
   <header class="signal-header">
     <button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-controls="contents-panel" aria-expanded="false">
       <span aria-hidden="true">☰</span><span class="sr-only">Open contents</span>
@@ -41,10 +39,10 @@
     <div class="signal-location" id="signal-location" aria-live="polite">OPEN TRANSMISSION</div>
     <div class="header-actions">
       <button class="text-button translate-toggle" id="translate-toggle" type="button" aria-pressed="false" title="Translate every annotated phrase">
-        <span aria-hidden="true">文→A</span><span class="button-label"> AUTO TRANSLATE</span>
+        <span aria-hidden="true">文/A</span><span class="button-label"> AUTO TRANSLATE</span>
       </button>
-      <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Change color theme">
-        <span class="theme-icon" aria-hidden="true">☼</span>
+      <button class="text-button theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Change color theme">
+        <span class="theme-icon" aria-hidden="true">☼</span><span class="button-label theme-label"> LIGHT MODE</span>
       </button>
     </div>
   </header>
@@ -73,48 +71,63 @@
           <button type="button" id="font-larger" aria-label="Increase text size">A+</button>
         </div>
         <div class="contents-footer">
-          <a href="https://lastnpcalex.agency">lastnpcalex.agency ↗</a>
+          <a href="https://lastnpcalex.agency">lastnpcalex.agency</a>
           <span>CC BY 4.0 · COMPLETE EDITION</span>
         </div>
       </div>
     </aside>
 
     <main class="reader-main" id="main">
-      <article class="transmission-frame" id="book">
-        <section class="book-hero" id="top" data-nav-title="Cover">
-          <div class="hero-visual">
-            <button class="cover-open figure-open" type="button" data-image="assets/cover.jpg" aria-label="Enlarge the cover">
-              <img src="assets/cover.jpg" alt="A Mote in Shadow book cover" width="1200" height="1920">
-            </button>
-            <div class="cover-signal" aria-hidden="true"><span>EXU.01</span><span>AMS-66036</span></div>
-          </div>
-          <div class="hero-copy">
-            <div class="section-signal">// OPEN TRANSMISSION · EXU BOOK 1</div>
-            <h1>A Mote<br><span>in Shadow</span></h1>
-            <p class="hero-author">A novel by <strong>A.N. Alex</strong></p>
-            <p class="hero-deck">A complete hard-science-fiction transmission from the edge of inhabited space.</p>
-            <div class="hero-actions">
-              <a class="primary-action" id="begin-reading" href="#chapter-one">BEGIN READING <span aria-hidden="true">→</span></a>
-              <button class="secondary-action" id="guide-toggle" type="button" aria-expanded="false" aria-controls="reader-guide">READER GUIDE</button>
+      <div class="transmission-shell">
+        <article class="transmission-frame" id="book">
+          <section class="book-hero" id="top" data-nav-title="Cover">
+            <div class="hero-visual">
+              <button class="cover-open figure-open" type="button" data-image="assets/cover.jpg" aria-label="Enlarge the cover">
+                <img src="assets/cover.jpg" alt="A Mote in Shadow book cover" width="1200" height="1920">
+              </button>
+              <div class="cover-signal" aria-hidden="true"><span>EXU.01</span><span>AMS-66036</span></div>
             </div>
-            <div class="reader-guide" id="reader-guide" hidden>
-              <p>Highlighted note numbers mark translated speech. Hover, focus, or tap one to decode the phrase. Auto Translate decodes every marked phrase in place.</p>
+            <div class="hero-copy">
+              <div class="section-signal">// OPEN TRANSMISSION · EXU BOOK 1</div>
+              <h1>A Mote<br><span>in Shadow</span></h1>
+              <p class="hero-author">A novel by <strong>A.N. Alex</strong></p>
+              <div class="amazon-blurb">
+                <p><strong>A burnt-out exobiologist and a peaceful space hauler have their lives changed forever by an irresistible proposition—one that may send everyone hurtling toward annihilation.</strong></p>
+                <p>Chaeyoung No has devoted her career to disproving a theory that abiotic oxygen sterilized the cosmos. A weapons manufacturer has just offered to fund her dreams. She could silence her critics forever, but can she trust her funders?</p>
+                <p>Frederik Obialo yearns to build a permanent home for his daughter. When he’s offered triple pay for a quick haul, he sees his chance. All he has to do is shuttle some people to a weather station and ignore all the warning signs.</p>
+                <p>Their choices have sunk them deep into the shadowy world of corporate espionage. Now they have to deal with black ops kill teams, and military intrigue. But an alien discovery shatters their understanding of the universe. As they reveal eons-hidden truths, Chaeyoung and Frederik will propel humanity away from the path of the pale blue dot...toward the singularity of <em>A Mote in Shadow</em>.</p>
+              </div>
+              <div class="hero-actions" aria-label="Read or buy A Mote in Shadow">
+                <a class="primary-action" id="begin-reading" href="#chapter-one">READ FREE</a>
+                <a class="store-action" href="https://a.co/d/d4eV40z" rel="external">AMAZON</a>
+                <a class="store-action preferred-store" href="https://lastnpcalex.gumroad.com/l/AMoteInShadow" rel="external">GUMROAD · PREFERRED</a>
+                <a class="secondary-action" href="https://lastnpcalex.agency/ams" rel="external">ALL EDITIONS</a>
+                <button class="secondary-action" id="guide-toggle" type="button" aria-expanded="false" aria-controls="reader-guide">READER GUIDE</button>
+              </div>
+              <div class="reader-guide" id="reader-guide" hidden>
+                <p>Highlighted note numbers mark translated speech. Hover, focus, or tap one to decode the phrase. Auto Translate decodes every marked phrase in place.</p>
+              </div>
+              <dl class="book-stats">
+                <div><dt>CHAPTERS</dt><dd>{{CHAPTER_COUNT}}</dd></div>
+                <div><dt>TRANSLATION NOTES</dt><dd>{{NOTE_COUNT}}</dd></div>
+                <div><dt>ACCESS</dt><dd>FREE</dd></div>
+              </dl>
             </div>
-            <dl class="book-stats">
-              <div><dt>CHAPTERS</dt><dd>{{CHAPTER_COUNT}}</dd></div>
-              <div><dt>TRANSLATION NOTES</dt><dd>{{NOTE_COUNT}}</dd></div>
-              <div><dt>ACCESS</dt><dd>FREE</dd></div>
-            </dl>
-          </div>
-        </section>
+          </section>
 
-        {{BOOK_CONTENT}}
-      </article>
+          {{BOOK_CONTENT}}
 
-      <footer class="site-footer">
-        <span>// END TRANSMISSION</span>
-        <p>A Mote in Shadow © 2024 A.N. Alex · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a></p>
-      </footer>
+          <footer class="site-footer">
+            <span>// END TRANSMISSION</span>
+            <p>A Mote in Shadow © 2024 A.N. Alex · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a></p>
+          </footer>
+        </article>
+        <div class="reading-progress" role="progressbar" aria-label="Novel reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span class="progress-label">NOVEL</span>
+          <span class="progress-track" aria-hidden="true"><span id="reading-progress-bar"></span></span>
+          <output id="reading-progress-value">0%</output>
+        </div>
+      </div>
     </main>
   </div>
 
