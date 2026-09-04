@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Read A Mote in Shadow, the complete hard science-fiction novel by A.N. Alex, free online.">
+  <meta name="author" content="A.N. Alex">
+  <meta property="og:type" content="book">
+  <meta property="og:title" content="A Mote in Shadow · Read free online">
+  <meta property="og:description" content="The complete novel, with interactive Di Lingua translations and reference dossiers.">
+  <meta property="og:image" content="assets/social-cover.jpg">
+  <meta name="theme-color" content="#090912">
+  <title>A Mote in Shadow · A.N. Alex</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400;1,7..72,600&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('ams-theme');
+      var preferred = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = saved || preferred;
+    }());
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#book">Skip to the book</a>
+  <div class="signal-field" aria-hidden="true"></div>
+  <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
+
+  <header class="signal-header">
+    <button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-controls="contents-panel" aria-expanded="false">
+      <span aria-hidden="true">☰</span><span class="sr-only">Open contents</span>
+    </button>
+    <a class="signal-brand" href="#top" aria-label="A Mote in Shadow, top of page">
+      <span class="signal-pulse" aria-hidden="true"></span>
+      <span>A MOTE IN SHADOW</span>
+    </a>
+    <div class="signal-location" id="signal-location" aria-live="polite">OPEN TRANSMISSION</div>
+    <div class="header-actions">
+      <button class="text-button translate-toggle" id="translate-toggle" type="button" aria-pressed="false" title="Translate every annotated phrase">
+        <span aria-hidden="true">文→A</span><span class="button-label"> AUTO TRANSLATE</span>
+      </button>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Change color theme">
+        <span class="theme-icon" aria-hidden="true">☼</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="reader-layout">
+    <div class="contents-scrim" id="contents-scrim" hidden></div>
+    <aside class="contents-panel" id="contents-panel" aria-label="Book contents">
+      <div class="contents-inner">
+        <a class="cover-mini" href="#top" tabindex="-1" aria-hidden="true">
+          <img src="assets/cover.jpg" alt="" width="120" height="192">
+        </a>
+        <div class="contents-heading">
+          <span>// SIGNAL INDEX</span>
+          <button class="contents-close" id="contents-close" type="button" aria-label="Close contents">×</button>
+        </div>
+        <label class="contents-filter">
+          <span class="sr-only">Filter contents</span>
+          <span aria-hidden="true">⌕</span>
+          <input id="contents-filter" type="search" placeholder="FILTER TRANSMISSIONS" autocomplete="off">
+        </label>
+        <nav id="generated-contents"></nav>
+        <div class="reader-controls" aria-label="Text size">
+          <span>TYPE SCALE</span>
+          <button type="button" id="font-smaller" aria-label="Decrease text size">A−</button>
+          <output id="font-size-output">100%</output>
+          <button type="button" id="font-larger" aria-label="Increase text size">A+</button>
+        </div>
+        <div class="contents-footer">
+          <a href="https://lastnpcalex.agency">lastnpcalex.agency ↗</a>
+          <span>CC BY 4.0 · COMPLETE EDITION</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="reader-main" id="main">
+      <article class="transmission-frame" id="book">
+        <section class="book-hero" id="top" data-nav-title="Cover">
+          <div class="hero-visual">
+            <button class="cover-open figure-open" type="button" data-image="assets/cover.jpg" aria-label="Enlarge the cover">
+              <img src="assets/cover.jpg" alt="A Mote in Shadow book cover" width="1200" height="1920">
+            </button>
+            <div class="cover-signal" aria-hidden="true"><span>EXU.01</span><span>AMS-66036</span></div>
+          </div>
+          <div class="hero-copy">
+            <div class="section-signal">// OPEN TRANSMISSION · EXU BOOK 1</div>
+            <h1>A Mote<br><span>in Shadow</span></h1>
+            <p class="hero-author">A novel by <strong>A.N. Alex</strong></p>
+            <p class="hero-deck">A complete hard-science-fiction transmission from the edge of inhabited space.</p>
+            <div class="hero-actions">
+              <a class="primary-action" id="begin-reading" href="#chapter-one">BEGIN READING <span aria-hidden="true">→</span></a>
+              <button class="secondary-action" id="guide-toggle" type="button" aria-expanded="false" aria-controls="reader-guide">READER GUIDE</button>
+            </div>
+            <div class="reader-guide" id="reader-guide" hidden>
+              <p>Highlighted note numbers mark translated speech. Hover, focus, or tap one to decode the phrase. Auto Translate decodes every marked phrase in place.</p>
+            </div>
+            <dl class="book-stats">
+              <div><dt>CHAPTERS</dt><dd>{{CHAPTER_COUNT}}</dd></div>
+              <div><dt>TRANSLATION NOTES</dt><dd>{{NOTE_COUNT}}</dd></div>
+              <div><dt>ACCESS</dt><dd>FREE</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        {{BOOK_CONTENT}}
+      </article>
+
+      <footer class="site-footer">
+        <span>// END TRANSMISSION</span>
+        <p>A Mote in Shadow © 2024 A.N. Alex · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a></p>
+      </footer>
+    </main>
+  </div>
+
+  <dialog class="image-dialog" id="image-dialog" aria-label="Expanded figure">
+    <button class="dialog-close" type="button" aria-label="Close expanded figure">× CLOSE</button>
+    <img id="dialog-image" alt="">
+  </dialog>
+
+  <noscript>
+    <div class="noscript-notice">JavaScript is optional for reading, but is required for the generated contents and translation animations.</div>
+  </noscript>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

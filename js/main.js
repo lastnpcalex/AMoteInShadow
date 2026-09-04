@@ -1,263 +1,275 @@
-/* ==========================================================================
-   Site JS (sidebar toggle, theme toggle, image handling, include loader,
-   active nav highlighting)
-   ========================================================================== */
+(function () {
+  'use strict';
 
-// Wait for DOM content to be loaded
-document.addEventListener('DOMContentLoaded', function () {
-  // Initialize sidebar toggle
-  initSidebarToggle();
+  const root = document.documentElement;
+  const body = document.body;
+  const contentsPanel = document.getElementById('contents-panel');
+  const contentsScrim = document.getElementById('contents-scrim');
+  const menuToggle = document.getElementById('menu-toggle');
+  const contentsClose = document.getElementById('contents-close');
+  const generatedContents = document.getElementById('generated-contents');
+  const locationLabel = document.getElementById('signal-location');
+  const progressBar = document.getElementById('reading-progress-bar');
+  const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-  // Initialize theme toggle
-  initThemeToggle();
-
-  // Initialize image handling
-  initImageHandling();
-});
-
-/* ===========================
-   Sidebar toggle functionality
-   =========================== */
-function initSidebarToggle() {
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', function () {
-      sidebar.classList.toggle('active');
-    });
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', function (event) {
-      if (
-        window.innerWidth <= 768 &&
-        !sidebar.contains(event.target) &&
-        event.target !== menuToggle
-      ) {
-        sidebar.classList.remove('active');
-      }
-    });
+  function setTheme(theme) {
+    root.dataset.theme = theme;
+    localStorage.setItem('ams-theme', theme);
+    const toggle = document.getElementById('theme-toggle');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    toggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+    toggle.querySelector('.theme-icon').textContent = theme === 'dark' ? '☼' : '◐';
   }
-}
 
-/* =========================
-   Theme toggle functionality
-   ========================= */
-function initThemeToggle() {
-  const themeToggle = document.querySelector('.theme-toggle');
-
-  if (themeToggle) {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      document.body.setAttribute('data-theme', savedTheme);
-    }
-
-    // Toggle theme on button click
-    themeToggle.addEventListener('click', function () {
-      const currentTheme = document.body.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-      document.body.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-    });
-  }
-}
-
-/* ==========================
-   Image handling functionality
-   ========================== */
-function initImageHandling() {
-  const images = document.querySelectorAll('.novel-image');
-  const imageOverlay = document.querySelector('.image-overlay');
-
-  if (images.length > 0 && imageOverlay) {
-    images.forEach((image) => {
-      // Add click handler to expand/rotate images
-      image.addEventListener('click', function () {
-        this.classList.toggle('expanded');
-        imageOverlay.classList.toggle('active');
-      });
-    });
-
-    // Add click handler to close expanded images
-    imageOverlay.addEventListener('click', function () {
-      const expandedImage = document.querySelector('.novel-image.expanded');
-      if (expandedImage) {
-        expandedImage.classList.remove('expanded');
-        imageOverlay.classList.remove('active');
-      }
-    });
-  }
-}
-
-/* =========================================
-   Simple include loader for the new nav bar
-   - Replaces elements with [data-include="..."]
-   - Dispatches "include:loaded" event when done
-   ========================================= */
-document.addEventListener('DOMContentLoaded', async () => {
-  const zones = document.querySelectorAll('[data-include]');
-  if (!zones.length) return;
-
-  for (const zone of zones) {
-    const target = zone.getAttribute('data-include'); // e.g., "nav.html"
-    // Resolve URL relative to the current page (your chapter file)
-    const url = new URL(target, location.href).toString();
-    console.log('[include] fetching:', url);
-
-    try {
-      const res = await fetch(url, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const html = await res.text();
-      // Replace the placeholder node with the fetched markup
-      zone.outerHTML = html;
-      console.log('[include] injected:', url);
-
-      // Signal that this include finished
-      document.dispatchEvent(new CustomEvent('include:loaded', { detail: { url } }));
-    } catch (err) {
-      console.error('[include] failed:', url, err);
-      zone.innerHTML = `
-        <div style="padding:.75rem;border:1px solid #c33;color:#c33;background:#fee">
-          Failed to load <code>${url}</code> – ${err.message}.
-          Check the path and that you're serving over http(s), not file://
-        </div>`;
-    }
-  }
-});
-
-/* =========================================
-   Active nav highlighter
-   - Highlights the link for the current page
-   - Expands matching subnavs
-   - Updates on history/hash changes
-   ========================================= */
-
-/**
- * Normalize a URL to a comparable path (lowercase, no query/hash,
- * treat "/x/" and "/x/index.html" as the same, remove trailing slash except root).
- */
-function normalizePath(u) {
-  try {
-    const url = new URL(u, location.origin);
-    let p = url.pathname;
-
-    // Treat /x/index.html and /x/ as the same
-    p = p.replace(/\/index\.html$/i, '/');
-
-    // Remove trailing slash (except root)
-    if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
-
-    // Lowercase & decode for consistency
-    p = decodeURIComponent(p).toLowerCase();
-
-    return p;
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Finds and sets the active state on the best-matching nav link:
- * 1) If a hash is present and a subnav link matches it, prefer that.
- * 2) Else pick exact file match.
- * 3) Else use the longest prefix match (helps when linking to a section root).
- */
-function initActiveNavHighlight() {
-  // Your nav is injected as <nav class="sidebar">...</nav> in nav.html
-  const sidebarNav = document.querySelector('nav.sidebar');
-  if (!sidebarNav) return;
-
-  const navLinks = sidebarNav.querySelectorAll('a[href]');
-  if (!navLinks.length) return;
-
-  const herePath = normalizePath(location.pathname + location.search);
-  const hereHash = (location.hash || '').trim();
-
-  // Clear previous states
-  navLinks.forEach((a) => {
-    a.classList.remove('active', 'current');
-    a.removeAttribute('aria-current');
-    a.closest('li')?.classList.remove('active', 'current');
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
   });
+  setTheme(root.dataset.theme || 'dark');
 
-  // Helper to mark an anchor and expand containing groups
-  const markActive = (a) => {
-    a.classList.add('active');
-    a.setAttribute('aria-current', 'page');
-    a.closest('li')?.classList.add('active');
-
-    // Expand any parent "subnav-list" containers, if you collapse them via CSS/JS
-    const subnav = a.closest('.subnav-list');
-    if (subnav) {
-      // If you use a collapsible marker, set it here:
-      subnav.classList.add('open');
-      subnav.closest('li')?.classList.add('open');
-    }
-
-    // Optionally ensure visibility in the sidebar
-    a.scrollIntoView({ block: 'nearest' });
-  };
-
-  // 1) If hash exists and a subnav link matches it (same page), prefer that
-  if (hereHash) {
-    const hashTarget = Array.from(navLinks).find((a) => {
-      // Same page (ignoring hash) and same hash
-      const linkUrl = new URL(a.getAttribute('href'), location.href);
-      const linkPath = normalizePath(linkUrl.pathname);
-      return linkPath === herePath && linkUrl.hash === hereHash;
-    });
-    if (hashTarget) {
-      markActive(hashTarget);
-      return;
-    }
+  function setContents(open) {
+    contentsPanel.classList.toggle('open', open);
+    contentsScrim.hidden = !open;
+    menuToggle.setAttribute('aria-expanded', String(open));
+    body.style.overflow = open && innerWidth <= 1120 ? 'hidden' : '';
+    if (open) document.getElementById('contents-filter').focus();
   }
 
-  // 2) Try exact match on path
-  let best = null;
-  let bestLen = -1;
+  menuToggle.addEventListener('click', () => setContents(!contentsPanel.classList.contains('open')));
+  contentsClose.addEventListener('click', () => setContents(false));
+  contentsScrim.addEventListener('click', () => setContents(false));
 
-  navLinks.forEach((a) => {
-    const linkUrl = new URL(a.getAttribute('href'), location.href);
-    const linkPath = normalizePath(linkUrl.pathname);
+  const navigableSections = Array.from(document.querySelectorAll('#book > section[data-nav-title]'));
 
-    if (!linkPath) return;
+  function sectionKind(section) {
+    if (section.classList.contains('part-divider')) return 'part';
+    if (section.classList.contains('chapter-section')) return 'chapter';
+    if (section.classList.contains('appendix-section')) return 'appendix';
+    if (section.classList.contains('about-section')) return 'about';
+    return section.id === 'top' ? 'cover' : 'front';
+  }
 
-    if (linkPath === herePath) {
-      best = a;
-      bestLen = Infinity; // exact beats all
-    } else if (herePath.startsWith(linkPath) && linkPath.length > bestLen) {
-      // 3) Longest prefix match as fallback
-      best = a;
-      bestLen = linkPath.length;
+  function buildContents() {
+    const fragment = document.createDocumentFragment();
+    navigableSections.forEach((section, index) => {
+      const link = document.createElement('a');
+      const code = document.createElement('span');
+      const title = document.createElement('span');
+      const kind = sectionKind(section);
+      link.className = 'toc-link';
+      link.dataset.kind = kind;
+      link.dataset.search = section.dataset.navTitle.toLowerCase();
+      link.href = `#${section.id}`;
+      code.className = 'toc-code';
+      code.textContent = String(index).padStart(2, '0');
+      title.textContent = section.dataset.navTitle;
+      link.append(code, title);
+      link.addEventListener('click', () => setContents(false));
+      fragment.append(link);
+    });
+    generatedContents.replaceChildren(fragment);
+  }
+
+  function buildSectionPagers() {
+    const readingSections = navigableSections.filter((section) => {
+      const kind = sectionKind(section);
+      return kind === 'chapter' || kind === 'appendix' || kind === 'about';
+    });
+    readingSections.forEach((section, index) => {
+      const pager = document.createElement('nav');
+      pager.className = 'section-pager';
+      pager.setAttribute('aria-label', 'Previous and next sections');
+      const previous = readingSections[index - 1];
+      const next = readingSections[index + 1];
+      pager.append(
+        previous ? pagerLink(previous, '← PREVIOUS') : document.createElement('span'),
+        next ? pagerLink(next, 'NEXT →') : document.createElement('span')
+      );
+      section.append(pager);
+    });
+  }
+
+  function pagerLink(section, direction) {
+    const link = document.createElement('a');
+    const label = document.createElement('span');
+    const title = document.createElement('strong');
+    link.className = 'pager-link';
+    link.href = `#${section.id}`;
+    label.textContent = direction;
+    title.textContent = section.dataset.navTitle;
+    link.append(label, title);
+    return link;
+  }
+
+  buildContents();
+  buildSectionPagers();
+
+  document.getElementById('contents-filter').addEventListener('input', function () {
+    const query = this.value.trim().toLowerCase();
+    const links = Array.from(generatedContents.querySelectorAll('.toc-link'));
+    let visible = 0;
+    links.forEach((link) => {
+      const matches = !query || link.dataset.search.includes(query);
+      link.hidden = !matches;
+      visible += Number(matches);
+    });
+    const oldEmpty = generatedContents.querySelector('.toc-empty');
+    if (oldEmpty) oldEmpty.remove();
+    if (!visible) {
+      const empty = document.createElement('p');
+      empty.className = 'toc-empty';
+      empty.textContent = 'NO MATCHING SIGNALS';
+      generatedContents.append(empty);
     }
   });
 
-  if (best) {
-    markActive(best);
+  function markActive(section) {
+    if (!section) return;
+    generatedContents.querySelectorAll('.toc-link').forEach((link) => {
+      const active = link.hash === `#${section.id}`;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    locationLabel.textContent = section.dataset.navTitle.toUpperCase();
+    if (section.id !== 'top') localStorage.setItem('ams-last-section', section.id);
   }
-}
 
-// Re-run highlight after the nav include is injected
-document.addEventListener('include:loaded', (e) => {
-  // If you ever include more than one file, you can scope by filename:
-  // e.g., if (e.detail?.url?.endsWith('/nav.html')) { ... }
-  initActiveNavHighlight();
-});
+  const sectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+    if (visible[0]) markActive(visible[0].target);
+  }, { rootMargin: '-14% 0px -66% 0px', threshold: [0, 0.01, 0.15] });
+  navigableSections.forEach((section) => sectionObserver.observe(section));
 
-// Keep it in sync on navigation within the browser
-window.addEventListener('popstate', initActiveNavHighlight);
-window.addEventListener('hashchange', initActiveNavHighlight);
+  const savedSection = localStorage.getItem('ams-last-section');
+  const savedTarget = savedSection && document.getElementById(savedSection);
+  if (savedTarget && !location.hash) {
+    const begin = document.getElementById('begin-reading');
+    begin.href = `#${savedSection}`;
+    begin.firstChild.textContent = `RESUME · ${savedTarget.dataset.navTitle.toUpperCase()} `;
+  }
 
-// Optional: If your site uses JS-driven internal link navigation (pushState),
-// you can call initActiveNavHighlight() after you update history.
-// Example:
-// document.addEventListener('click', (e) => {
-//   const a = e.target.closest('a[href^="./"], a[href^="../"], a[href^="/"]');
-//   if (!a || a.target || a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
-//   // ... do your pushState SPA handling ...
-//   // After changing history, call:
-//   // initActiveNavHighlight();
-// });
+  let progressQueued = false;
+  function updateProgress() {
+    const documentHeight = document.documentElement.scrollHeight - innerHeight;
+    const progress = documentHeight > 0 ? Math.min(1, Math.max(0, scrollY / documentHeight)) : 0;
+    progressBar.style.width = `${progress * 100}%`;
+    progressQueued = false;
+  }
+  addEventListener('scroll', () => {
+    if (!progressQueued) {
+      progressQueued = true;
+      requestAnimationFrame(updateProgress);
+    }
+  }, { passive: true });
+  updateProgress();
 
+  const translateToggle = document.getElementById('translate-toggle');
+  function setAutoTranslate(enabled) {
+    body.classList.toggle('auto-translate', enabled);
+    translateToggle.setAttribute('aria-pressed', String(enabled));
+    translateToggle.title = enabled ? 'Show original annotated phrases' : 'Translate every annotated phrase';
+    localStorage.setItem('ams-auto-translate', String(enabled));
+  }
+  translateToggle.addEventListener('click', () => {
+    setAutoTranslate(translateToggle.getAttribute('aria-pressed') !== 'true');
+  });
+  setAutoTranslate(localStorage.getItem('ams-auto-translate') === 'true');
+
+  const translationUnits = Array.from(document.querySelectorAll('.translation-unit'));
+
+  function positionPopover(unit) {
+    const trigger = unit.querySelector('.translation-trigger');
+    const popover = unit.querySelector('.translation-popover');
+    const rect = trigger.getBoundingClientRect();
+    const halfWidth = Math.min(200, (innerWidth - 24) / 2);
+    const left = Math.max(halfWidth + 12, Math.min(innerWidth - halfWidth - 12, rect.left + rect.width / 2));
+    const below = rect.top < popover.offsetHeight + 80;
+    unit.classList.toggle('popover-below', below);
+    unit.style.setProperty('--tooltip-left', `${left}px`);
+    unit.style.setProperty('--tooltip-top', `${below ? rect.bottom : rect.top}px`);
+  }
+
+  function decode(unit) {
+    if (body.classList.contains('auto-translate')) return;
+    positionPopover(unit);
+    unit.classList.remove('is-decoding');
+    void unit.offsetWidth;
+    unit.classList.add('is-decoding');
+  }
+
+  function closeUnpinned(unit) {
+    if (!unit.classList.contains('is-pinned')) unit.classList.remove('is-decoding');
+  }
+
+  translationUnits.forEach((unit) => {
+    const trigger = unit.querySelector('.translation-trigger');
+    unit.addEventListener('pointerenter', () => decode(unit));
+    unit.addEventListener('pointerleave', () => closeUnpinned(unit));
+    trigger.addEventListener('focus', () => decode(unit));
+    trigger.addEventListener('blur', () => closeUnpinned(unit));
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const pinned = !unit.classList.contains('is-pinned');
+      translationUnits.forEach((other) => other.classList.remove('is-pinned', 'is-decoding'));
+      unit.classList.toggle('is-pinned', pinned);
+      if (pinned) decode(unit);
+    });
+  });
+
+  document.addEventListener('click', () => {
+    translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
+      setContents(false);
+    }
+  });
+
+  const fontOutput = document.getElementById('font-size-output');
+  let fontScale = Number(localStorage.getItem('ams-font-scale') || 1);
+  function setFontScale(next) {
+    fontScale = Math.min(1.25, Math.max(0.85, Math.round(next * 20) / 20));
+    root.style.setProperty('--reader-scale', fontScale);
+    fontOutput.value = `${Math.round(fontScale * 100)}%`;
+    fontOutput.textContent = fontOutput.value;
+    localStorage.setItem('ams-font-scale', String(fontScale));
+  }
+  document.getElementById('font-smaller').addEventListener('click', () => setFontScale(fontScale - 0.05));
+  document.getElementById('font-larger').addEventListener('click', () => setFontScale(fontScale + 0.05));
+  setFontScale(fontScale);
+
+  const guideToggle = document.getElementById('guide-toggle');
+  const guide = document.getElementById('reader-guide');
+  guideToggle.addEventListener('click', () => {
+    const expanded = guideToggle.getAttribute('aria-expanded') !== 'true';
+    guideToggle.setAttribute('aria-expanded', String(expanded));
+    guide.hidden = !expanded;
+  });
+
+  const dialog = document.getElementById('image-dialog');
+  const dialogImage = document.getElementById('dialog-image');
+  document.querySelectorAll('.figure-open').forEach((button) => {
+    button.addEventListener('click', () => {
+      const source = button.dataset.image;
+      const inlineImage = button.querySelector('img');
+      dialogImage.src = source;
+      dialogImage.alt = inlineImage ? inlineImage.alt : '';
+      dialog.showModal();
+    });
+  });
+  dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  addEventListener('resize', () => {
+    if (innerWidth > 1120) setContents(false);
+    document.querySelectorAll('.translation-unit.is-decoding, .translation-unit.is-pinned').forEach(positionPopover);
+  });
+
+  if (prefersReducedMotion.matches) body.classList.add('reduced-motion');
+}());
