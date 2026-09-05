@@ -86,6 +86,7 @@ class ReaderTests(unittest.TestCase):
         self.assertNotIn("positionPopover", (REPO / "js" / "main.js").read_text(encoding="utf-8"))
         self.assertIn("word-spacing: normal", self.styles)
         self.assertRegex(self.styles, r"\.decode-word\s*\{[^}]*text-indent:\s*0")
+        self.assertIn("(hover: none) and (pointer: coarse)", (REPO / "js" / "main.js").read_text(encoding="utf-8"))
 
     def test_assets_are_versioned_and_agency_menu_is_present(self) -> None:
         self.assertRegex(self.page, r'href="css/style\.css\?v=[0-9a-f]{12}"')

@@ -14,6 +14,7 @@
   const progressBar = document.getElementById('reading-progress-bar');
   const progressValue = document.getElementById('reading-progress-value');
   const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const primaryTouch = matchMedia('(hover: none) and (pointer: coarse)');
   const navMenu = document.getElementById('nav-menu');
   const navToggle = document.getElementById('nav-toggle');
 
@@ -188,17 +189,23 @@
     if (!unit.classList.contains('is-pinned')) unit.classList.remove('is-decoding');
   }
 
+  function togglePinned(unit) {
+    const pinned = !unit.classList.contains('is-pinned');
+    translationUnits.forEach((other) => other.classList.remove('is-pinned', 'is-decoding'));
+    unit.classList.toggle('is-pinned', pinned);
+    if (pinned) decode(unit);
+  }
+
   translationUnits.forEach((unit) => {
     const trigger = unit.querySelector('.translation-trigger');
     unit.addEventListener('pointerenter', () => decode(unit));
     trigger.addEventListener('focus', () => decode(unit));
     trigger.addEventListener('blur', () => closeUnpinned(unit));
-    trigger.addEventListener('click', (event) => {
+    unit.addEventListener('click', (event) => {
+      const clickedTrigger = event.target.closest('.translation-trigger') === trigger;
+      if (!primaryTouch.matches && !clickedTrigger) return;
       event.stopPropagation();
-      const pinned = !unit.classList.contains('is-pinned');
-      translationUnits.forEach((other) => other.classList.remove('is-pinned', 'is-decoding'));
-      unit.classList.toggle('is-pinned', pinned);
-      if (pinned) decode(unit);
+      togglePinned(unit);
     });
   });
 
@@ -209,6 +216,7 @@
   });
 
   document.addEventListener('click', () => {
+    if (primaryTouch.matches) return;
     translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
   });
 

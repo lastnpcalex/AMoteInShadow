@@ -26,6 +26,7 @@ def main() -> None:
         page.goto(args.url, wait_until="domcontentloaded")
         page.evaluate("localStorage.setItem('ams-theme', 'dark'); localStorage.setItem('ams-auto-translate', 'false')")
         page.reload(wait_until="domcontentloaded")
+        assert not page.evaluate("matchMedia('(hover: none) and (pointer: coarse)').matches")
 
         assert page.locator(".chapter-section").count() == 24
         assert page.locator(".translation-unit").count() == 169
@@ -168,6 +169,30 @@ def main() -> None:
             assert short_shell["y"] + short_shell["height"] <= 474
             assert page.locator("#book").evaluate("element => element.scrollWidth <= element.clientWidth + 1")
             page.screenshot(path=str(REPO / "tmp-short-frame.png"), full_page=False)
+
+        touch_context = browser.new_context(
+            viewport={"width": 390, "height": 844},
+            device_scale_factor=2,
+            has_touch=True,
+            is_mobile=True,
+        )
+        touch_page = touch_context.new_page()
+        touch_page.on("pageerror", lambda error: page_errors.append(str(error)))
+        touch_page.goto(args.url, wait_until="domcontentloaded")
+        touch_page.evaluate("localStorage.setItem('ams-theme', 'dark'); localStorage.setItem('ams-auto-translate', 'false')")
+        touch_page.reload(wait_until="domcontentloaded")
+        assert touch_page.evaluate("matchMedia('(hover: none) and (pointer: coarse)').matches")
+        touch_note = touch_page.locator("#translation-3").locator("xpath=..")
+        touch_note.scroll_into_view_if_needed()
+        touch_note.tap()
+        assert touch_note.evaluate("element => element.classList.contains('is-pinned')")
+        assert touch_note.locator(".target-layer").evaluate("element => getComputedStyle(element).display") == "inline"
+        touch_page.locator("#chapter-two h2").tap()
+        assert touch_note.evaluate("element => element.classList.contains('is-pinned')")
+        touch_note.tap()
+        assert not touch_note.evaluate("element => element.classList.contains('is-pinned')")
+        assert touch_note.locator(".source-layer").evaluate("element => getComputedStyle(element).display") == "inline"
+        touch_context.close()
 
         browser.close()
 

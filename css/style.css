@@ -782,6 +782,10 @@ img { display: block; max-width: 100%; }
 }
 .decode-word { display: inline-block; text-indent: 0; }
 
+@media (hover: none) and (pointer: coarse) {
+  .translation-unit { cursor: pointer; }
+}
+
 .translation-trigger {
   flex: 0 0 auto;
   position: relative;
