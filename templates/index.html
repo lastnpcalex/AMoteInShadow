@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v={{ASSET_VERSION}}">
   <script>
     (function () {
       var saved = localStorage.getItem('ams-theme');
@@ -28,15 +28,31 @@
 <body>
   <a class="skip-link" href="#book">Skip to the book</a>
   <div class="signal-field" aria-hidden="true"></div>
-  <header class="signal-header">
-    <button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-controls="contents-panel" aria-expanded="false">
-      <span aria-hidden="true">☰</span><span class="sr-only">Open contents</span>
-    </button>
-    <a class="signal-brand" href="#top" aria-label="A Mote in Shadow, top of page">
-      <span>A MOTE IN SHADOW</span>
-    </a>
-    <div class="signal-location" id="signal-location" aria-live="polite">OPEN TRANSMISSION</div>
+  <header class="header-bar" role="banner">
+    <div class="header-texture" aria-hidden="true"></div>
+    <div class="header-noise" aria-hidden="true"></div>
+    <div class="header-shimmer" aria-hidden="true"></div>
+    <div class="nav-menu" id="nav-menu">
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-dropdown" aria-label="Open lastnpcalex.agency menu">
+        <span class="nav-toggle-icon" aria-hidden="true">☰</span>
+      </button>
+      <nav class="nav-dropdown" id="nav-dropdown" aria-label="lastnpcalex.agency">
+        <div class="nav-item"><a class="nav-link" href="https://lastnpcalex.agency/"><span class="nav-link-icon" aria-hidden="true">⌂</span><span class="nav-link-label">HOME</span></a></div>
+        <div class="nav-item"><a class="nav-link active" href="https://lastnpcalex.agency/ams" aria-current="page"><span class="nav-link-icon" aria-hidden="true">◬</span><span class="nav-link-label">A MOTE IN SHADOW</span></a></div>
+        <div class="nav-item"><a class="nav-link" href="https://lastnpcalex.agency/futures.html"><span class="nav-link-icon" aria-hidden="true">⌥</span><span class="nav-link-label">SPECULATIVE FUTURES</span></a></div>
+        <div class="nav-item"><a class="nav-link" href="https://lastnpcalex.agency/surfaces.html"><span class="nav-link-icon" aria-hidden="true">✦</span><span class="nav-link-label">SURFACES</span></a></div>
+        <div class="nav-item"><a class="nav-link" href="https://lastnpcalex.agency/maps.html"><span class="nav-link-icon" aria-hidden="true">⬡</span><span class="nav-link-label">MAPS</span></a></div>
+        <div class="nav-item"><a class="nav-link" href="https://lastnpcalex.agency/exu2374.html"><span class="nav-link-icon" aria-hidden="true">◎</span><span class="nav-link-label">TRANSIT NETWORK</span></a></div>
+      </nav>
+    </div>
+    <div class="header-content-wrapper">
+      <a class="header-brand" href="https://lastnpcalex.agency/">lastnpcalex.agency</a>
+      <span class="header-post-title" id="signal-location" aria-live="polite">A MOTE IN SHADOW · OPEN TRANSMISSION</span>
+    </div>
     <div class="header-actions">
+      <button class="text-button contents-toggle" id="menu-toggle" type="button" aria-controls="contents-panel" aria-expanded="false" title="Open book contents">
+        <span aria-hidden="true">TOC</span><span class="sr-only">Open book contents</span>
+      </button>
       <button class="text-button translate-toggle" id="translate-toggle" type="button" aria-pressed="false" title="Translate every annotated phrase">
         <span aria-hidden="true">文/A</span><span class="button-label"> AUTO TRANSLATE</span>
       </button>
@@ -138,6 +154,6 @@
   <noscript>
     <div class="noscript-notice">JavaScript is optional for reading, but is required for the generated contents and translation animations.</div>
   </noscript>
-  <script src="js/main.js" defer></script>
+  <script src="js/main.js?v={{ASSET_VERSION}}" defer></script>
 </body>
 </html>

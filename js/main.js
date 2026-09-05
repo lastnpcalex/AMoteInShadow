@@ -14,6 +14,23 @@
   const progressBar = document.getElementById('reading-progress-bar');
   const progressValue = document.getElementById('reading-progress-value');
   const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const navMenu = document.getElementById('nav-menu');
+  const navToggle = document.getElementById('nav-toggle');
+
+  function setAgencyMenu(open) {
+    navMenu.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', `${open ? 'Close' : 'Open'} lastnpcalex.agency menu`);
+  }
+
+  navToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setAgencyMenu(!navMenu.classList.contains('open'));
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!navMenu.contains(event.target)) setAgencyMenu(false);
+  });
 
   function setTheme(theme) {
     root.dataset.theme = theme;
@@ -102,7 +119,7 @@
       if (active) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');
     });
-    locationLabel.textContent = section.dataset.navTitle.toUpperCase();
+    locationLabel.textContent = `A MOTE IN SHADOW · ${section.dataset.navTitle.toUpperCase()}`;
     if (section.id !== 'top') localStorage.setItem('ams-last-section', section.id);
   }
 
@@ -159,6 +176,9 @@
 
   function decode(unit) {
     if (body.classList.contains('auto-translate')) return;
+    translationUnits.forEach((other) => {
+      if (other !== unit && !other.classList.contains('is-pinned')) other.classList.remove('is-decoding');
+    });
     unit.classList.remove('is-decoding');
     void unit.offsetWidth;
     unit.classList.add('is-decoding');
@@ -171,7 +191,6 @@
   translationUnits.forEach((unit) => {
     const trigger = unit.querySelector('.translation-trigger');
     unit.addEventListener('pointerenter', () => decode(unit));
-    unit.addEventListener('pointerleave', () => closeUnpinned(unit));
     trigger.addEventListener('focus', () => decode(unit));
     trigger.addEventListener('blur', () => closeUnpinned(unit));
     trigger.addEventListener('click', (event) => {
@@ -183,12 +202,19 @@
     });
   });
 
+  new Set(translationUnits.map((unit) => unit.closest('p')).filter(Boolean)).forEach((paragraph) => {
+    paragraph.addEventListener('pointerleave', () => {
+      paragraph.querySelectorAll('.translation-unit').forEach(closeUnpinned);
+    });
+  });
+
   document.addEventListener('click', () => {
     translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      setAgencyMenu(false);
       translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
       setContents(false);
     }

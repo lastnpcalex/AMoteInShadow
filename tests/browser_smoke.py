@@ -33,9 +33,9 @@ def main() -> None:
         assert page.locator(".section-pager").count() == 0
         assert page.locator('a[href="https://a.co/d/d4eV40z"]').count() == 1
         assert page.locator('a[href="https://lastnpcalex.gumroad.com/l/AMoteInShadow"]').count() == 1
-        assert page.locator('a[href="https://lastnpcalex.agency/ams"]').count() == 1
+        assert page.locator('.hero-actions a[href="https://lastnpcalex.agency/ams"]').count() == 1
 
-        header_box = page.locator(".signal-header").bounding_box()
+        header_box = page.locator(".header-bar").bounding_box()
         layout_box = page.locator(".reader-layout").bounding_box()
         assert header_box is not None and layout_box is not None
         assert abs(header_box["x"] - layout_box["x"]) < 1
@@ -44,7 +44,7 @@ def main() -> None:
         assert page.locator("html").evaluate(
             "element => getComputedStyle(element).getPropertyValue('--cyan').trim()"
         ) == "#00ffff"
-        assert "Orbitron" in page.locator(".signal-brand").evaluate("element => getComputedStyle(element).fontFamily")
+        assert "Orbitron" in page.locator(".header-brand").evaluate("element => getComputedStyle(element).fontFamily")
         assert "Share Tech Mono" in page.locator("#translate-toggle").evaluate(
             "element => getComputedStyle(element).fontFamily"
         )
@@ -55,6 +55,17 @@ def main() -> None:
         assert page.locator(".amazon-blurb").evaluate("element => getComputedStyle(element).borderLeftWidth") == "0px"
         active_toc = page.locator(".toc-link.active").first
         assert active_toc.evaluate("element => getComputedStyle(element, '::before').content") == "none"
+        assert page.locator(".header-brand").inner_text() == "lastnpcalex.agency"
+        assert page.locator(".nav-link").count() == 6
+        assert page.locator(".nav-link-arrow").count() == 0
+        page.locator("#nav-toggle").click()
+        assert page.locator("#nav-menu").evaluate("element => element.classList.contains('open')")
+        page.wait_for_timeout(250)
+        assert page.locator("#nav-dropdown").evaluate("element => getComputedStyle(element).visibility") == "visible"
+        if args.screenshots:
+            page.screenshot(path=str(REPO / "tmp-agency-menu.png"), full_page=False)
+        page.keyboard.press("Escape")
+        assert not page.locator("#nav-menu").evaluate("element => element.classList.contains('open')")
 
         shell_box = page.locator(".transmission-shell").bounding_box()
         assert shell_box is not None
@@ -85,6 +96,7 @@ def main() -> None:
         long_note = page.locator("#translation-3").locator("xpath=..")
         long_note.scroll_into_view_if_needed()
         long_note.hover()
+        page.wait_for_timeout(1000)
         word_boxes = long_note.locator(".target-layer .decode-word").evaluate_all(
             "elements => elements.map(element => element.getBoundingClientRect()).map(rect => ({left: rect.left, right: rect.right, top: rect.top}))"
         )
@@ -94,6 +106,13 @@ def main() -> None:
             if abs(word_boxes[index + 1]["top"] - box["top"]) < 1
         ]
         assert same_line_gaps and max(same_line_gaps) < 8, f"unexpected translated word gap: {max(same_line_gaps)}px"
+        assert word_boxes[5]["right"] - word_boxes[5]["left"] < 16, "single-letter word inherited paragraph indentation"
+        assert long_note.evaluate("element => getComputedStyle(element).textIndent") == "0px"
+        first_word = long_note.locator(".target-layer .decode-word").first
+        assert first_word.evaluate("element => getComputedStyle(element).animationName") == "word-decode"
+        assert long_note.locator(".source-layer").evaluate("element => getComputedStyle(element).display") == "none"
+        long_note.locator("xpath=ancestor::p").hover(position={"x": 4, "y": 4})
+        assert long_note.locator(".target-layer").evaluate("element => getComputedStyle(element).display") == "inline"
         if args.screenshots:
             page.wait_for_timeout(900)
             page.screenshot(path=str(REPO / "tmp-translation-dark.png"), full_page=False)
@@ -109,7 +128,7 @@ def main() -> None:
         assert page.locator("html").get_attribute("data-theme") != initial_theme
         assert prose.evaluate("element => getComputedStyle(element).color") == "rgb(46, 42, 38)"
         assert page.locator(".hero-copy h1").evaluate("element => getComputedStyle(element).color") == "rgb(74, 24, 104)"
-        assert page.locator(".signal-header").evaluate(
+        assert page.locator(".header-bar").evaluate(
             "element => getComputedStyle(element, '::after').backgroundColor"
         ) == "rgb(253, 250, 245)"
 
@@ -120,7 +139,7 @@ def main() -> None:
             page.screenshot(path=str(REPO / "tmp-light.png"), full_page=False)
             page.set_viewport_size({"width": 2048, "height": 1182})
             page.goto(f"{args.url}?preview=wide-light#top", wait_until="domcontentloaded")
-            wide_header = page.locator(".signal-header").bounding_box()
+            wide_header = page.locator(".header-bar").bounding_box()
             wide_layout = page.locator(".reader-layout").bounding_box()
             assert wide_header is not None and wide_layout is not None
             assert abs(wide_header["x"] - wide_layout["x"]) < 1
@@ -129,6 +148,11 @@ def main() -> None:
             page.set_viewport_size({"width": 390, "height": 844})
             page.evaluate("localStorage.setItem('ams-theme', 'dark')")
             page.goto(args.url, wait_until="domcontentloaded")
+            page.locator("#nav-toggle").click()
+            page.wait_for_timeout(250)
+            assert page.locator("#nav-dropdown").evaluate("element => getComputedStyle(element).visibility") == "visible"
+            page.screenshot(path=str(REPO / "tmp-mobile-agency-menu.png"), full_page=False)
+            page.keyboard.press("Escape")
             page.locator("#menu-toggle").click()
             assert page.locator("#contents-panel").evaluate("element => element.classList.contains('open')")
             page.wait_for_timeout(300)

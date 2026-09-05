@@ -33,7 +33,7 @@ class ReaderParser(HTMLParser):
         for attribute in ("src", "href"):
             value = attrs.get(attribute)
             if value and not value.startswith(("#", "http://", "https://", "mailto:")):
-                self.local_files.append(value.split("#", 1)[0])
+                self.local_files.append(value.split("#", 1)[0].split("?", 1)[0])
 
     @staticmethod
     def assert_translation(attrs: dict[str, str | None]) -> None:
@@ -85,6 +85,16 @@ class ReaderTests(unittest.TestCase):
         self.assertNotIn("translation-result", self.page)
         self.assertNotIn("positionPopover", (REPO / "js" / "main.js").read_text(encoding="utf-8"))
         self.assertIn("word-spacing: normal", self.styles)
+        self.assertRegex(self.styles, r"\.decode-word\s*\{[^}]*text-indent:\s*0")
+
+    def test_assets_are_versioned_and_agency_menu_is_present(self) -> None:
+        self.assertRegex(self.page, r'href="css/style\.css\?v=[0-9a-f]{12}"')
+        self.assertRegex(self.page, r'src="js/main\.js\?v=[0-9a-f]{12}"')
+        self.assertIn('class="header-bar"', self.page)
+        self.assertIn('id="nav-menu"', self.page)
+        self.assertIn('id="nav-dropdown"', self.page)
+        self.assertIn('class="header-brand" href="https://lastnpcalex.agency/"', self.page)
+        self.assertNotIn("nav-link-arrow", self.page)
 
     def test_reader_shell_and_purchase_paths(self) -> None:
         self.assertIn('class="transmission-shell"', self.page)

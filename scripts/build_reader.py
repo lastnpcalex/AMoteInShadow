@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -478,10 +479,15 @@ def build(args: argparse.Namespace) -> None:
 
     chapter_count = sum(section.kind == "chapter" for section in sections)
     page = template.read_text(encoding="utf-8")
+    asset_digest = hashlib.sha256()
+    for asset_path in (repo / "css" / "style.css", repo / "js" / "main.js"):
+        asset_digest.update(asset_path.read_bytes())
+    asset_version = asset_digest.hexdigest()[:12]
     replacements = {
         "{{BOOK_CONTENT}}": book_markup,
         "{{CHAPTER_COUNT}}": str(chapter_count),
         "{{NOTE_COUNT}}": str(len(footnotes)),
+        "{{ASSET_VERSION}}": asset_version,
     }
     for placeholder, value in replacements.items():
         page = page.replace(placeholder, value)
