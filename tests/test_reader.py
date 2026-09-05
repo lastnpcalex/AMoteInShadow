@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import re
 import unittest
 from html.parser import HTMLParser
@@ -79,6 +80,34 @@ class ReaderTests(unittest.TestCase):
     def test_translation_numbers_are_contiguous(self) -> None:
         numbers = [int(value) for value in re.findall(r'id="translation-(\d+)"', self.page)]
         self.assertEqual(numbers, list(range(1, 170)))
+
+    def test_every_translation_contains_its_attached_italic_phrase(self) -> None:
+        source_markup = re.findall(
+            r'<span class="source-layer">(.*?)</span>', self.page, re.DOTALL
+        )
+        self.assertEqual(len(source_markup), 169)
+        self.assertTrue(all("<em>" in source for source in source_markup))
+        self.assertTrue(
+            all(not source.startswith((" ", "\t", " ")) for source in source_markup)
+        )
+
+        sources = [
+            html.unescape(source)
+            for source in re.findall(
+                r'class="translation-unit"[^>]*data-source="([^"]*)"', self.page
+            )
+        ]
+        for expected in (
+            "Ahdioseu, Charles.",
+            "Hao fa, Gray Top",
+            "Hao fa, Ya Ke Juliet Sierra zero-one-four.",
+            "Anchuan shiyong, Frederik.",
+            "Chu’eh son, Dr. No.",
+        ):
+            self.assertTrue(
+                any(expected in source for source in sources),
+                f"Missing complete attached Di Lingua phrase: {expected}",
+            )
 
     def test_translations_decode_inline_without_popovers(self) -> None:
         self.assertNotIn("translation-popover", self.page)

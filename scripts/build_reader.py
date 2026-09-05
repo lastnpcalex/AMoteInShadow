@@ -138,6 +138,53 @@ def translation_unit(
     )
 
 
+def attached_italic_start(chunks: list[InlineChunk]) -> int:
+    """Find the full mixed-format Di Lingua phrase attached to a footnote."""
+    end = len(chunks)
+    nearest_italic: int | None = None
+    scanned_characters = 0
+
+    # Word frequently splits a single phrase into italic words followed by a
+    # non-italic name, punctuation, or closing quote. Anchor the unit to the
+    # nearest italic run instead of assuming the run beside the note is italic.
+    for distance, cursor in enumerate(range(end - 1, -1, -1), start=1):
+        scanned_characters += len(chunks[cursor].text)
+        if distance > 16 or scanned_characters > 240:
+            break
+        if chunks[cursor].italic:
+            nearest_italic = cursor
+            break
+
+    if nearest_italic is None:
+        return max(0, end - 1)
+
+    start = nearest_italic
+    cursor = nearest_italic - 1
+    opening_punctuation = "“‘([{'\""
+    connecting_punctuation = ",;:—–-/'’"
+
+    # Continue through the rest of the contiguous italic expression. Spaces
+    # and light punctuation are often separate non-italic Word runs.
+    while cursor >= 0:
+        chunk = chunks[cursor]
+        stripped = chunk.text.strip()
+        if chunk.italic:
+            start = cursor
+        elif stripped:
+            if any(character.isalnum() for character in stripped):
+                break
+            if all(character in opening_punctuation for character in stripped):
+                start = cursor
+                break
+            if not all(character in connecting_punctuation for character in stripped):
+                break
+        # Whitespace and connecting punctuation are included only if the scan
+        # reaches another italic run, proving they sit inside the expression.
+        cursor -= 1
+
+    return start
+
+
 def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
     runs = paragraph.findall(".//w:r", NS)
     chunks: list[InlineChunk] = []
@@ -149,42 +196,16 @@ def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
             display_number = max(1, int(footnote_id) - 1)
             note = footnotes.get(footnote_id, "Translation unavailable")
 
-            end = len(chunks)
-            cursor = end - 1
-            found_italic = False
-            start = end
-            while cursor >= 0:
-                chunk = chunks[cursor]
-                stripped = chunk.text.strip()
-                punctuation_only = not stripped or not any(char.isalnum() for char in stripped)
-                if chunk.italic:
-                    found_italic = True
-                    start = cursor
-                elif punctuation_only and not found_italic and end - cursor <= 3:
-                    # Closing quotation marks and punctuation may be in their own,
-                    # non-italic run immediately after the translated phrase.
-                    start = cursor
-                elif punctuation_only and found_italic:
-                    # Include a standalone opening quote, but stop before punctuation
-                    # belonging to the preceding English sentence (for example: '. “').
-                    opening = stripped and all(char in "“‘([{\"'" for char in stripped)
-                    if opening:
-                        start = cursor
-                    else:
-                        break
-                elif found_italic:
-                    break
-                else:
-                    break
-                cursor -= 1
-
-            if not found_italic and chunks:
-                start = len(chunks) - 1
+            start = attached_italic_start(chunks)
 
             phrase = chunks[start:]
             del chunks[start:]
             source_markup = "".join(chunk.markup for chunk in phrase)
             source_text = "".join(chunk.text for chunk in phrase)
+            leading_spacing = source_markup[: len(source_markup) - len(source_markup.lstrip(" \t "))]
+            source_markup = source_markup[len(leading_spacing) :]
+            if leading_spacing:
+                chunks.append(InlineChunk(leading_spacing, ""))
             chunks.append(
                 InlineChunk(
                     translation_unit(source_markup, source_text, note, display_number),
