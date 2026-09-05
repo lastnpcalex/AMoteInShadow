@@ -157,21 +157,8 @@
 
   const translationUnits = Array.from(document.querySelectorAll('.translation-unit'));
 
-  function positionPopover(unit) {
-    const trigger = unit.querySelector('.translation-trigger');
-    const popover = unit.querySelector('.translation-popover');
-    const rect = trigger.getBoundingClientRect();
-    const halfWidth = Math.min(200, (innerWidth - 24) / 2);
-    const left = Math.max(halfWidth + 12, Math.min(innerWidth - halfWidth - 12, rect.left + rect.width / 2));
-    const below = rect.top < popover.offsetHeight + 80;
-    unit.classList.toggle('popover-below', below);
-    unit.style.setProperty('--tooltip-left', `${left}px`);
-    unit.style.setProperty('--tooltip-top', `${below ? rect.bottom : rect.top}px`);
-  }
-
   function decode(unit) {
     if (body.classList.contains('auto-translate')) return;
-    positionPopover(unit);
     unit.classList.remove('is-decoding');
     void unit.offsetWidth;
     unit.classList.add('is-decoding');
@@ -247,7 +234,6 @@
   addEventListener('resize', () => {
     if (innerWidth > 1120) setContents(false);
     updateProgress();
-    document.querySelectorAll('.translation-unit.is-decoding, .translation-unit.is-pinned').forEach(positionPopover);
   });
 
   if (prefersReducedMotion.matches) body.classList.add('reduced-motion');

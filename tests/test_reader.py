@@ -80,6 +80,12 @@ class ReaderTests(unittest.TestCase):
         numbers = [int(value) for value in re.findall(r'id="translation-(\d+)"', self.page)]
         self.assertEqual(numbers, list(range(1, 170)))
 
+    def test_translations_decode_inline_without_popovers(self) -> None:
+        self.assertNotIn("translation-popover", self.page)
+        self.assertNotIn("translation-result", self.page)
+        self.assertNotIn("positionPopover", (REPO / "js" / "main.js").read_text(encoding="utf-8"))
+        self.assertIn("word-spacing: normal", self.styles)
+
     def test_reader_shell_and_purchase_paths(self) -> None:
         self.assertIn('class="transmission-shell"', self.page)
         self.assertIn('aria-label="Novel reading progress"', self.page)

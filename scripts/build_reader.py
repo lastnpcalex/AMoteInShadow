@@ -130,16 +130,10 @@ def translation_unit(
         f'<span class="source-layer">{source_markup}</span>'
         f'<span class="target-layer" aria-hidden="true">{animated_words(translation)}</span>'
         "</span>"
-        f'<button class="translation-trigger" type="button" aria-describedby="{unit_id}" '
+        f'<button class="translation-trigger" id="{unit_id}" type="button" '
         f'aria-label="Translation note {display_number}: {html.escape(translation, quote=True)}">'
         f"{display_number}</button>"
-        f'<span class="translation-popover" id="{unit_id}" role="tooltip">'
-        '<span class="decode-scan" aria-hidden="true"></span>'
-        f'<span class="translation-kicker">// {html.escape(language.upper())} · NOTE {display_number:03d}</span>'
-        f'<span class="translation-original">{html.escape(source_text.strip())}</span>'
-        f'<span class="translation-result">{animated_words(translation)}</span>'
-        '<span class="translation-hint">TAP TO HOLD · ESC TO CLOSE</span>'
-        "</span></span>"
+        "</span>"
     )
 
 

@@ -75,9 +75,25 @@ def main() -> None:
         first_note.scroll_into_view_if_needed()
         first_note.hover()
         assert first_note.evaluate("element => element.scrollWidth <= element.clientWidth + 1")
-        assert first_note.locator(".translation-popover").evaluate(
-            "element => getComputedStyle(element).visibility"
-        ) == "visible"
+        assert page.locator(".translation-popover").count() == 0
+        assert first_note.locator(".source-layer").evaluate(
+            "element => getComputedStyle(element).display"
+        ) == "none"
+        assert first_note.locator(".target-layer").evaluate(
+            "element => getComputedStyle(element).display"
+        ) == "inline"
+        long_note = page.locator("#translation-3").locator("xpath=..")
+        long_note.scroll_into_view_if_needed()
+        long_note.hover()
+        word_boxes = long_note.locator(".target-layer .decode-word").evaluate_all(
+            "elements => elements.map(element => element.getBoundingClientRect()).map(rect => ({left: rect.left, right: rect.right, top: rect.top}))"
+        )
+        same_line_gaps = [
+            word_boxes[index + 1]["left"] - box["right"]
+            for index, box in enumerate(word_boxes[:-1])
+            if abs(word_boxes[index + 1]["top"] - box["top"]) < 1
+        ]
+        assert same_line_gaps and max(same_line_gaps) < 8, f"unexpected translated word gap: {max(same_line_gaps)}px"
         if args.screenshots:
             page.wait_for_timeout(900)
             page.screenshot(path=str(REPO / "tmp-translation-dark.png"), full_page=False)
@@ -85,8 +101,8 @@ def main() -> None:
         page.locator("#translate-toggle").click()
         assert page.locator("body").evaluate("element => element.classList.contains('auto-translate')")
         assert first_note.locator(".target-layer").evaluate(
-            "element => Number(getComputedStyle(element).opacity)"
-        ) > 0.9
+            "element => getComputedStyle(element).display"
+        ) == "inline"
 
         initial_theme = page.locator("html").get_attribute("data-theme")
         page.locator("#theme-toggle").click()
