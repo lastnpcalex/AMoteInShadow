@@ -45,6 +45,7 @@ class ReaderTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.page = (REPO / "index.html").read_text(encoding="utf-8")
+        cls.styles = (REPO / "css" / "style.css").read_text(encoding="utf-8")
         cls.parser = ReaderParser()
         cls.parser.feed(cls.page)
 
@@ -92,6 +93,16 @@ class ReaderTests(unittest.TestCase):
         self.assertNotIn("pager-link", self.page)
         for arrow in ("→", "↗", "←"):
             self.assertNotIn(arrow, self.page)
+
+    def test_acidburn_tokens_and_no_left_highlights(self) -> None:
+        for token in ("--cyan: #00ffff", "--purple: #bf00ff", "--green: #00ff88"):
+            self.assertIn(token, self.styles)
+        self.assertIn('--mono: "Share Tech Mono"', self.styles)
+        self.assertIn('--serif: "Source Serif 4"', self.styles)
+        self.assertNotIn(".toc-link.active::before", self.styles)
+        blurb_rule = re.search(r"\.amazon-blurb\s*\{(?P<body>.*?)\}", self.styles, re.DOTALL)
+        self.assertIsNotNone(blurb_rule)
+        self.assertIn("border: 0", blurb_rule.group("body"))
 
 
 if __name__ == "__main__":

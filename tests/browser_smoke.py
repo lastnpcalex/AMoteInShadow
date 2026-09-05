@@ -35,6 +35,27 @@ def main() -> None:
         assert page.locator('a[href="https://lastnpcalex.gumroad.com/l/AMoteInShadow"]').count() == 1
         assert page.locator('a[href="https://lastnpcalex.agency/ams"]').count() == 1
 
+        header_box = page.locator(".signal-header").bounding_box()
+        layout_box = page.locator(".reader-layout").bounding_box()
+        assert header_box is not None and layout_box is not None
+        assert abs(header_box["x"] - layout_box["x"]) < 1
+        assert abs(header_box["width"] - layout_box["width"]) < 1
+        assert header_box["y"] == 0 and header_box["height"] == 50
+        assert page.locator("html").evaluate(
+            "element => getComputedStyle(element).getPropertyValue('--cyan').trim()"
+        ) == "#00ffff"
+        assert "Orbitron" in page.locator(".signal-brand").evaluate("element => getComputedStyle(element).fontFamily")
+        assert "Share Tech Mono" in page.locator("#translate-toggle").evaluate(
+            "element => getComputedStyle(element).fontFamily"
+        )
+        prose = page.locator(".chapter-section p:not(.scene-date):not(.scene-place):not(.scene-stamp)").first
+        assert "Source Serif 4" in prose.evaluate(
+            "element => getComputedStyle(element).fontFamily"
+        )
+        assert page.locator(".amazon-blurb").evaluate("element => getComputedStyle(element).borderLeftWidth") == "0px"
+        active_toc = page.locator(".toc-link.active").first
+        assert active_toc.evaluate("element => getComputedStyle(element, '::before').content") == "none"
+
         shell_box = page.locator(".transmission-shell").bounding_box()
         assert shell_box is not None
         assert shell_box["y"] + shell_box["height"] <= page.viewport_size["height"] - 8
@@ -70,12 +91,25 @@ def main() -> None:
         initial_theme = page.locator("html").get_attribute("data-theme")
         page.locator("#theme-toggle").click()
         assert page.locator("html").get_attribute("data-theme") != initial_theme
+        assert prose.evaluate("element => getComputedStyle(element).color") == "rgb(46, 42, 38)"
+        assert page.locator(".hero-copy h1").evaluate("element => getComputedStyle(element).color") == "rgb(74, 24, 104)"
+        assert page.locator(".signal-header").evaluate(
+            "element => getComputedStyle(element, '::after').backgroundColor"
+        ) == "rgb(253, 250, 245)"
 
         if args.screenshots:
             page.evaluate("localStorage.setItem('ams-theme', 'light'); localStorage.setItem('ams-auto-translate', 'false')")
             page.goto(f"{args.url}?preview=light#top", wait_until="domcontentloaded")
             assert page.locator("html").get_attribute("data-theme") == "light"
             page.screenshot(path=str(REPO / "tmp-light.png"), full_page=False)
+            page.set_viewport_size({"width": 2048, "height": 1182})
+            page.goto(f"{args.url}?preview=wide-light#top", wait_until="domcontentloaded")
+            wide_header = page.locator(".signal-header").bounding_box()
+            wide_layout = page.locator(".reader-layout").bounding_box()
+            assert wide_header is not None and wide_layout is not None
+            assert abs(wide_header["x"] - wide_layout["x"]) < 1
+            assert abs(wide_header["width"] - wide_layout["width"]) < 1
+            page.screenshot(path=str(REPO / "tmp-wide-light.png"), full_page=False)
             page.set_viewport_size({"width": 390, "height": 844})
             page.evaluate("localStorage.setItem('ams-theme', 'dark')")
             page.goto(args.url, wait_until="domcontentloaded")
