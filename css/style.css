@@ -709,6 +709,38 @@ img { display: block; max-width: 100%; }
 .front-matter .list-paragraph { position: relative; text-align: left; padding-left: 1.3rem; }
 .front-matter .list-paragraph::before { content: "◆"; position: absolute; left: 0; color: var(--purple); font-size: 0.6em; }
 
+.appendix-section .list-paragraph {
+  position: relative;
+  margin-bottom: 0.45rem;
+  padding-left: 1.35rem;
+  line-height: 1.65;
+}
+
+.appendix-section .list-paragraph::before {
+  content: "•";
+  position: absolute;
+  left: 0.25rem;
+  color: var(--purple);
+}
+
+.appendix-section .list-level-1 {
+  margin-left: 1.35rem;
+}
+
+.appendix-section .list-level-1::before {
+  content: "◦";
+  color: var(--cyan);
+}
+
+.appendix-section .list-level-2 {
+  margin-left: 2.7rem;
+}
+
+.appendix-section .list-level-2::before {
+  content: "▪";
+  color: var(--green);
+}
+
 .scene-date {
   margin-bottom: 0.15rem !important;
   color: var(--green);

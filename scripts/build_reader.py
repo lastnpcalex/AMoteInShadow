@@ -93,6 +93,18 @@ def style_of(paragraph: ET.Element) -> str:
     return style.get(q(W, "val"), "") if style is not None else ""
 
 
+def numbering_level(paragraph: ET.Element) -> int | None:
+    """Return a paragraph's OOXML list level, or None when it is not a list item."""
+    numbering = paragraph.find("w:pPr/w:numPr", NS)
+    if numbering is None:
+        return None
+    number_id = numbering.find("w:numId", NS)
+    if number_id is None or number_id.get(q(W, "val"), "0") == "0":
+        return None
+    level = numbering.find("w:ilvl", NS)
+    return int(level.get(q(W, "val"), "0")) if level is not None else 0
+
+
 def note_parts(note: str) -> tuple[str, str]:
     match = re.match(r"\s*\[([^]]+)]\s*:\s*(.*?)\s*$", note)
     if match:
@@ -491,8 +503,11 @@ def render_manuscript(
 
         paragraph_markup = run_chunks(paragraph, footnotes)
         classes: list[str] = []
-        if style == "ListParagraph":
+        list_level = numbering_level(paragraph)
+        if style == "ListParagraph" or list_level is not None:
             classes.append("list-paragraph")
+        if list_level is not None:
+            classes.append(f"list-level-{list_level}")
         if text == "***":
             classes.append("scene-break")
         if current_kind == "chapter":

@@ -159,6 +159,27 @@ class ReaderTests(unittest.TestCase):
         self.assertIsNotNone(rule)
         self.assertIn("text-align: center", rule.group("body"))
 
+    def test_character_bio_bullets_follow_docx_numbering(self) -> None:
+        section = re.search(
+            r'<section class="appendix-section transmission-section" id="persons-of-interest"'
+            r'(?P<body>.*?)</section>',
+            self.page,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(section)
+        body = section.group("body")
+        self.assertEqual(body.count("list-paragraph"), 215)
+        self.assertEqual(body.count("list-level-1"), 10)
+        self.assertRegex(
+            body,
+            r'<p class="list-paragraph list-level-0">2342: EVA qualified\.',
+        )
+        self.assertRegex(
+            self.styles,
+            r'\.appendix-section \.list-paragraph::before\s*\{[^}]*content:\s*"•"',
+        )
+        self.assertIn(".appendix-section .list-level-2", self.styles)
+
     def test_translations_decode_inline_without_popovers(self) -> None:
         self.assertNotIn("translation-popover", self.page)
         self.assertNotIn("translation-result", self.page)
