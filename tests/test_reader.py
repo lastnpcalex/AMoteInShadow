@@ -109,6 +109,56 @@ class ReaderTests(unittest.TestCase):
                 f"Missing complete attached Di Lingua phrase: {expected}",
             )
 
+    def test_reported_translation_boundaries(self) -> None:
+        def source_for(number: int) -> str:
+            match = re.search(
+                rf'<span class="translation-unit"[^>]*data-source="([^"]*)"[^\n]*'
+                rf'id="translation-{number}"',
+                self.page,
+            )
+            self.assertIsNotNone(match, f"Missing translation {number}")
+            return html.unescape(match.group(1))
+
+        expected_sources = {
+            90: "“Erm, prastitey?”",
+            91: "“Neva palava.”",
+            93: "“Nawa oh!”",
+            94: "“Na yu gah gahdah lul tsow!”",
+            99: "“Oke, binu ohlowyeh.",
+            100: "“Ye, A gah am sabi.",
+            110: "“Yu’ll tsow.”",
+            132: "“Neva palava.”",
+            135: "“Nawa oh! Anchuan shiyong!”",
+            157: "“Juan juye.",
+            162: "Hao fa,",
+        }
+        for number, expected in expected_sources.items():
+            self.assertEqual(source_for(number), expected)
+        self.assertRegex(
+            self.page,
+            r'id="translation-162"[^<]*</button></span>',
+        )
+        self.assertIn('<span class="translation-context"><em> Dr. No?”</em></span>', self.page)
+
+    def test_complex_script_flags_do_not_italicize_latin_prose(self) -> None:
+        for opening in (
+            "Once we land, it’ll be just like that Old Towne operation",
+            "The thump of boots vibrating through the floor of the hab",
+            "If that’s the only way, then fine.",
+        ):
+            paragraph = re.search(
+                rf"<p[^>]*>[^\n]*?(?P<body>{re.escape(opening)}[^\n]*)</p>", self.page
+            )
+            self.assertIsNotNone(paragraph, f"Missing reported prose: {opening}")
+            self.assertNotIn("<em>", paragraph.group("body"))
+
+    def test_scene_breaks_are_centered(self) -> None:
+        self.assertNotRegex(self.page, r"<p>(?:<em>)?\*\*\*")
+        self.assertGreater(self.page.count('class="scene-break"'), 5)
+        rule = re.search(r"\.scene-break\s*\{(?P<body>.*?)\}", self.styles, re.DOTALL)
+        self.assertIsNotNone(rule)
+        self.assertIn("text-align: center", rule.group("body"))
+
     def test_translations_decode_inline_without_popovers(self) -> None:
         self.assertNotIn("translation-popover", self.page)
         self.assertNotIn("translation-result", self.page)
@@ -116,6 +166,9 @@ class ReaderTests(unittest.TestCase):
         self.assertIn("word-spacing: normal", self.styles)
         self.assertRegex(self.styles, r"\.decode-word\s*\{[^}]*text-indent:\s*0")
         self.assertIn("(hover: none) and (pointer: coarse)", (REPO / "js" / "main.js").read_text(encoding="utf-8"))
+        script = (REPO / "js" / "main.js").read_text(encoding="utf-8")
+        self.assertIn("unit.style.inlineSize", script)
+        self.assertIn("removeProperty('inline-size')", script)
 
     def test_assets_are_versioned_and_agency_menu_is_present(self) -> None:
         self.assertRegex(self.page, r'href="css/style\.css\?v=[0-9a-f]{12}"')

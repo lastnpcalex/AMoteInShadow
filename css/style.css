@@ -699,6 +699,7 @@ img { display: block; max-width: 100%; }
 .transmission-section .scene-date,
 .transmission-section .scene-place,
 .transmission-section .scene-stamp,
+.transmission-section .scene-break,
 .transmission-section .list-paragraph { text-indent: 0; }
 
 .transmission-section em { color: var(--rv-text-secondary); font-style: italic; }
@@ -721,6 +722,11 @@ img { display: block; max-width: 100%; }
   font: 500 calc(0.74rem * var(--reader-scale))/1.5 var(--mono) !important;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.scene-break {
+  text-align: center;
+  text-indent: 0 !important;
 }
 
 .scene-stamp {

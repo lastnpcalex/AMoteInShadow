@@ -161,8 +161,10 @@
   }, { passive: true });
   updateProgress();
 
+  const translationUnits = Array.from(document.querySelectorAll('.translation-unit'));
   const translateToggle = document.getElementById('translate-toggle');
   function setAutoTranslate(enabled) {
+    if (enabled) translationUnits.forEach(clearTranslationState);
     body.classList.toggle('auto-translate', enabled);
     translateToggle.setAttribute('aria-pressed', String(enabled));
     translateToggle.title = enabled ? 'Show original annotated phrases' : 'Translate every annotated phrase';
@@ -173,25 +175,31 @@
   });
   setAutoTranslate(localStorage.getItem('ams-auto-translate') === 'true');
 
-  const translationUnits = Array.from(document.querySelectorAll('.translation-unit'));
+  function clearTranslationState(unit) {
+    unit.classList.remove('is-pinned', 'is-decoding');
+    unit.style.removeProperty('inline-size');
+  }
 
   function decode(unit) {
     if (body.classList.contains('auto-translate')) return;
     translationUnits.forEach((other) => {
-      if (other !== unit && !other.classList.contains('is-pinned')) other.classList.remove('is-decoding');
+      if (other !== unit && !other.classList.contains('is-pinned')) clearTranslationState(other);
     });
     unit.classList.remove('is-decoding');
+    unit.style.removeProperty('inline-size');
+    const sourceWidth = unit.getBoundingClientRect().width;
+    if (sourceWidth > 0) unit.style.inlineSize = `${sourceWidth}px`;
     void unit.offsetWidth;
     unit.classList.add('is-decoding');
   }
 
   function closeUnpinned(unit) {
-    if (!unit.classList.contains('is-pinned')) unit.classList.remove('is-decoding');
+    if (!unit.classList.contains('is-pinned')) clearTranslationState(unit);
   }
 
   function togglePinned(unit) {
     const pinned = !unit.classList.contains('is-pinned');
-    translationUnits.forEach((other) => other.classList.remove('is-pinned', 'is-decoding'));
+    translationUnits.forEach(clearTranslationState);
     unit.classList.toggle('is-pinned', pinned);
     if (pinned) decode(unit);
   }
@@ -217,13 +225,13 @@
 
   document.addEventListener('click', () => {
     if (primaryTouch.matches) return;
-    translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
+    translationUnits.forEach(clearTranslationState);
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       setAgencyMenu(false);
-      translationUnits.forEach((unit) => unit.classList.remove('is-pinned', 'is-decoding'));
+      translationUnits.forEach(clearTranslationState);
       setContents(false);
     }
   });

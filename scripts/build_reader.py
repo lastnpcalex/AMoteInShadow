@@ -120,9 +120,15 @@ def translation_unit(
     source_text: str,
     note: str,
     display_number: int,
+    persistent_markup: str = "",
 ) -> str:
     language, translation = note_parts(note)
     unit_id = f"translation-{display_number}"
+    context = (
+        f'<span class="translation-context">{persistent_markup}</span>'
+        if persistent_markup
+        else ""
+    )
     return (
         f'<span class="translation-unit" data-language="{html.escape(language, quote=True)}" '
         f'data-source="{html.escape(source_text.strip(), quote=True)}" '
@@ -131,6 +137,7 @@ def translation_unit(
         f'<span class="source-layer">{source_markup}</span>'
         f'<span class="target-layer" aria-hidden="true">{animated_words(translation)}</span>'
         "</span>"
+        f"{context}"
         f'<button class="translation-trigger" id="{unit_id}" type="button" '
         f'aria-label="Translation note {display_number}: {html.escape(translation, quote=True)}">'
         f"{display_number}</button>"
@@ -185,6 +192,42 @@ def attached_italic_start(chunks: list[InlineChunk]) -> int:
     return start
 
 
+def include_preceding_suffix(chunks: list[InlineChunk], start: int, suffix: str) -> int:
+    """Move an exact plain-text suffix before ``start`` into the translation."""
+    preceding = "".join(chunk.text for chunk in chunks[:start])
+    if not preceding.endswith(suffix):
+        return start
+
+    wanted_offset = len(preceding) - len(suffix)
+    offset = 0
+    for index, chunk in enumerate(chunks[:start]):
+        next_offset = offset + len(chunk.text)
+        if wanted_offset == offset:
+            return index
+        if offset < wanted_offset < next_offset:
+            split_at = wanted_offset - offset
+            if chunk.markup != html.escape(chunk.text):
+                return start
+            head = chunk.text[:split_at]
+            tail = chunk.text[split_at:]
+            chunks[index] = InlineChunk(html.escape(head), head)
+            chunks.insert(index + 1, InlineChunk(html.escape(tail), tail))
+            return index + 1
+        offset = next_offset
+    return start
+
+
+def formatting_enabled(properties: ET.Element | None, name: str) -> bool:
+    """Read an OOXML on/off property, including explicit false values."""
+    if properties is None:
+        return False
+    element = properties.find(f"w:{name}", NS)
+    if element is None:
+        return False
+    value = element.get(q(W, "val"), "true").lower()
+    return value not in {"0", "false", "off", "no"}
+
+
 def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
     runs = paragraph.findall(".//w:r", NS)
     chunks: list[InlineChunk] = []
@@ -198,6 +241,26 @@ def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
 
             start = attached_italic_start(chunks)
 
+            # Word sometimes leaves the first letter of an italic word in the
+            # preceding run. Recover that letter (and its opening quote) when
+            # the following italic fragment clearly continues the same word.
+            if start > 0 and chunks[start].text[:1].islower():
+                previous = chunks[start - 1].text
+                if previous[-1:].isalpha():
+                    attached = previous[-1:]
+                    if len(previous) > 1 and previous[-2] in "“‘\"'":
+                        attached = previous[-2:]
+                    start = include_preceding_suffix(chunks, start, attached)
+
+            # These footnotes translate a deliberately mixed-format lead-in,
+            # so include it even though Word did not mark every run italic.
+            attached_prefixes = {
+                90: "“Erm, ",
+                135: "“Nawa oh! ",
+            }
+            if display_number in attached_prefixes:
+                start = include_preceding_suffix(chunks, start, attached_prefixes[display_number])
+
             phrase = chunks[start:]
             del chunks[start:]
             source_markup = "".join(chunk.markup for chunk in phrase)
@@ -206,9 +269,24 @@ def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
             source_markup = source_markup[len(leading_spacing) :]
             if leading_spacing:
                 chunks.append(InlineChunk(leading_spacing, ""))
+
+            persistent_markup = ""
+            if display_number == 162 and source_text.strip() == "“Hao fa, Dr. No?”":
+                # Only the greeting is Di Lingua. Keep its addressee and both
+                # quotation marks visible while the greeting decodes.
+                chunks.append(InlineChunk("<em>“</em>", "“"))
+                source_markup = "<em>Hao fa,</em>"
+                source_text = "Hao fa,"
+                persistent_markup = "<em> Dr. No?”</em>"
             chunks.append(
                 InlineChunk(
-                    translation_unit(source_markup, source_text, note, display_number),
+                    translation_unit(
+                        source_markup,
+                        source_text,
+                        note,
+                        display_number,
+                        persistent_markup,
+                    ),
                     source_text,
                 )
             )
@@ -224,10 +302,10 @@ def run_chunks(paragraph: ET.Element, footnotes: dict[str, str]) -> str:
             continue
 
         properties = run.find("w:rPr", NS)
-        italic = properties is not None and (
-            properties.find("w:i", NS) is not None or properties.find("w:iCs", NS) is not None
-        )
-        bold = properties is not None and properties.find("w:b", NS) is not None
+        # w:iCs affects complex-script glyphs only. Treating it as Latin
+        # italics caused entire English passages to become emphasized.
+        italic = formatting_enabled(properties, "i")
+        bold = formatting_enabled(properties, "b")
         markup = html.escape(raw_text)
         if run.find(".//w:tab", NS) is not None:
             markup = " " + markup
@@ -415,6 +493,8 @@ def render_manuscript(
         classes: list[str] = []
         if style == "ListParagraph":
             classes.append("list-paragraph")
+        if text == "***":
+            classes.append("scene-break")
         if current_kind == "chapter":
             chapter_content_count += 1
             if chapter_content_count == 1 and re.match(r"^\[\d+]", text):
