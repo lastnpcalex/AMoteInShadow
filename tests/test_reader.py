@@ -6,6 +6,8 @@ import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
+from PIL import Image
+
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -207,6 +209,38 @@ class ReaderTests(unittest.TestCase):
         self.assertIn("https://a.co/d/d4eV40z", self.page)
         self.assertIn("https://lastnpcalex.gumroad.com/l/AMoteInShadow", self.page)
         self.assertIn("https://lastnpcalex.agency/ams", self.page)
+
+    def test_front_matter_dividers(self) -> None:
+        front_matter = re.search(
+            r'<section class="front-matter transmission-section"(?P<body>.*?)</section>',
+            self.page,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(front_matter)
+        body = front_matter.group("body")
+        self.assertEqual(body.count('<hr class="front-matter-divider">'), 2)
+        copyright_rule = body.index("No additional restrictions")
+        poem_title = body.index("Safe Handling")
+        first_rule = body.index('<hr class="front-matter-divider">')
+        final_line = body.index("abyssal current")
+        second_rule = body.rindex('<hr class="front-matter-divider">')
+        self.assertLess(copyright_rule, first_rule)
+        self.assertLess(first_rule, poem_title)
+        self.assertLess(final_line, second_rule)
+
+    def test_contents_panel_omits_cover(self) -> None:
+        script = (REPO / "js" / "main.js").read_text(encoding="utf-8")
+        self.assertIn("TABLE OF CONTENTS", self.page)
+        self.assertNotIn("SIGNAL INDEX", self.page)
+        self.assertNotIn("cover-mini", self.page)
+        self.assertIn("contentsSections = navigableSections.filter", script)
+        self.assertIn("contentsSections.forEach", script)
+
+    def test_book_and_social_covers_use_web_export_dimensions(self) -> None:
+        with Image.open(REPO / "assets" / "cover.jpg") as cover:
+            self.assertEqual(cover.size, (1200, 1920))
+        with Image.open(REPO / "assets" / "social-cover.jpg") as social_cover:
+            self.assertEqual(social_cover.size, (1200, 630))
 
     def test_infinite_scroll_has_no_pagers_or_link_arrows(self) -> None:
         self.assertNotIn("section-pager", self.page)

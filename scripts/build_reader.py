@@ -520,6 +520,11 @@ def render_manuscript(
                 classes.append("scene-stamp")
         class_attribute = f' class="{" ".join(classes)}"' if classes else ""
         output.append(f"<p{class_attribute}>{paragraph_markup}</p>")
+        if current_kind == "front" and (
+            text.startswith("No additional restrictions")
+            or text == "[Till abyssal currents have their claim.]"
+        ):
+            output.append('<hr class="front-matter-divider">')
         previous_blank = False
 
     if section_open:
@@ -624,12 +629,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--cover",
-        default=workspace / "KDP" / "AMS" / "web_1200x1920_72dpi.jpg",
+        default=workspace / "KDP" / "AMS_render_suite_r2" / "AMS" / "online" / "cover_1200x1920.jpg",
         help="Path to the web cover image.",
     )
     parser.add_argument(
         "--social-cover",
-        default=workspace / "KDP" / "AMS" / "social_og_1200x630_72dpi.jpg",
+        default=workspace / "KDP" / "AMS_render_suite_r2" / "AMS" / "online" / "social_landscape_1200x630.jpg",
         help="Path to the social preview image.",
     )
     return parser.parse_args()

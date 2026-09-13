@@ -61,6 +61,7 @@
   contentsScrim.addEventListener('click', () => setContents(false));
 
   const navigableSections = Array.from(document.querySelectorAll('#book > section[data-nav-title]'));
+  const contentsSections = navigableSections.filter((section) => section.id !== 'top');
 
   function sectionKind(section) {
     if (section.classList.contains('part-divider')) return 'part';
@@ -72,7 +73,7 @@
 
   function buildContents() {
     const fragment = document.createDocumentFragment();
-    navigableSections.forEach((section, index) => {
+    contentsSections.forEach((section, index) => {
       const link = document.createElement('a');
       const code = document.createElement('span');
       const title = document.createElement('span');

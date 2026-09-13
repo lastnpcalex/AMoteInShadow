@@ -386,20 +386,9 @@ img { display: block; max-width: 100%; }
 
 .contents-inner {
   display: grid;
-  grid-template-rows: auto auto auto minmax(5rem, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(5rem, 1fr) auto auto;
   height: 100%;
 }
-
-.cover-mini {
-  display: grid;
-  place-items: center;
-  height: 7rem;
-  overflow: hidden;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--purple) 18%, transparent), transparent);
-}
-
-.cover-mini img { width: 4.2rem; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); }
 
 .contents-heading {
   display: flex;
@@ -444,6 +433,14 @@ img { display: block; max-width: 100%; }
 }
 
 .contents-filter input::placeholder { color: var(--ink-faint); opacity: 0.8; }
+
+.front-matter-divider {
+  width: min(12rem, 45%);
+  height: 1px;
+  margin: 3rem auto;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--purple), var(--cyan), transparent);
+}
 
 #generated-contents {
   overflow: auto;
