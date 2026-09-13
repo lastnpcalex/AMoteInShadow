@@ -456,7 +456,6 @@ def render_manuscript(
                 output.append(
                     f'<section class="part-divider" id="{section_id}" data-nav-title="{html.escape(text, quote=True)}">'
                     '<div class="part-grid" aria-hidden="true"></div>'
-                    '<span class="section-signal">// CHANNEL DIVISION</span>'
                     f'<h2>{html.escape(text)}</h2></section>'
                 )
                 sections.append(Section(section_id, text, "part"))

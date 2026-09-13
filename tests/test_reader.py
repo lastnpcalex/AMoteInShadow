@@ -240,6 +240,9 @@ class ReaderTests(unittest.TestCase):
         self.assertNotIn("cover-signal", self.page)
         self.assertNotIn("EXU.01", self.page)
 
+    def test_part_dividers_have_no_channel_label(self) -> None:
+        self.assertNotIn("// CHANNEL DIVISION", self.page)
+
     def test_book_and_social_covers_use_web_export_dimensions(self) -> None:
         with Image.open(REPO / "assets" / "cover.jpg") as cover:
             self.assertEqual(cover.size, (1200, 1920))

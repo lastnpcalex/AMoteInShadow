@@ -774,7 +774,6 @@ img { display: block; max-width: 100%; }
   text-transform: uppercase;
 }
 
-.part-divider .section-signal { margin: 0; color: var(--cyan); }
 .part-grid { position: absolute; z-index: -1; inset: 0; opacity: 0.38; background: linear-gradient(90deg, transparent 49.8%, var(--line) 50%, transparent 50.2%), linear-gradient(transparent 49.8%, var(--line) 50%, transparent 50.2%); background-size: 3rem 3rem; mask-image: radial-gradient(circle, black, transparent 72%); }
 
 .manuscript-figure { width: min(100%, 66rem); margin: 4rem auto; }
