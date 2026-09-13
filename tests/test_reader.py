@@ -236,6 +236,10 @@ class ReaderTests(unittest.TestCase):
         self.assertIn("contentsSections = navigableSections.filter", script)
         self.assertIn("contentsSections.forEach", script)
 
+    def test_cover_has_no_floating_signal_tag(self) -> None:
+        self.assertNotIn("cover-signal", self.page)
+        self.assertNotIn("EXU.01", self.page)
+
     def test_book_and_social_covers_use_web_export_dimensions(self) -> None:
         with Image.open(REPO / "assets" / "cover.jpg") as cover:
             self.assertEqual(cover.size, (1200, 1920))
